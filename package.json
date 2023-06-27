@@ -1,0 +1,23 @@
+{
+  "author": "Shivang P Swain <me@shiva.ng> (https://shiva.ng/)",
+  "bugs": {
+    "url": "https://github.com/shivangswain/preflightcss/issues",
+    "email": "preflight@shiva.ng"
+  },
+  "description": "Preflight is a set of base styles that are designed to smooth over cross-browser inconsistencies and make it easier for you to work within the constraints of your design system.",
+  "funding": "https://shiva.ng/paypal",
+  "homepage": "https://shiva.ng/preflightcss",
+  "keywords": [
+    "tailwind",
+    "preflight",
+    "normalize",
+    "styles",
+    "css"
+  ],
+  "license": "MIT",
+  "main": "preflight.css",
+  "name": "preflightcss",
+  "packageManager": "yarn@3.6.0",
+  "repository": "https://github.com/shivangswain/preflightcss.git",
+  "version": "3.3.2"
+}

@@ -1,5 +1,10 @@
-# <Heading>Preflight</Heading>
-An opinionated set of base styles (from Tailwind CSS).
+<div align="center">
+	<img height="140px" src="./docs/logo.svg" alt="preflight">
+	<br>
+	“An opinionated set of base styles”
+	<br>
+	<i>- <a href="https://tailwindcss.com/docs/preflight">Tailwind.com</a></i>
+</div>
 
 ## <Heading hidden>Overview</Heading>
 
@@ -8,6 +13,42 @@ Built on top of [modern-normalize](https://github.com/sindresorhus/modern-normal
 While most of the styles in Preflight are meant to go unnoticed — they simply make things behave more like you'd expect them to — some are more opinionated and can be surprising when you first encounter them.
 
 For a complete reference of all the styles applied by Preflight, [see the stylesheet](https://unpkg.com/preflightcss/preflight.css).
+
+## ⚙️ Installation
+
+Using <a href="https://www.npmjs.com/">npm</a>:
+
+```properties
+npm install @shivangswain/preflightcss
+```
+Using <a href="https://yarnpkg.com/">yarn</a>:
+
+```properties
+yarn add @shivangswain/preflightcss
+```
+
+## 📖 Usage
+
+Using <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@import">CSS imports</a>:
+```css
+@import '@shivangswain/preflightcss/preflight.css';
+```
+
+Using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import">ES6 imports</a>:
+```typescript
+import '@shivangswain/preflightcss';
+```
+
+## 🌐 CDN
+Using <a href="https://www.jsdelivr.com/">JSDELIVR</a>:
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shivangswain/preflightcss/preflight.css">
+```
+
+Using <a href="https://www.jsdelivr.com/">UNPKG</a>:
+```html
+<link rel="stylesheet" href="https://unpkg.com/@shivangswain/preflightcss/preflight.css">
+```
 
 ---
 

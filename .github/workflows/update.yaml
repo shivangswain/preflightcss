@@ -30,15 +30,16 @@ jobs:
           echo "preflight_version=$PREFLIGHT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update Preflight
-        if: steps.tailwind-version.outputs.tailwind_version > steps.preflight-version.outputs.preflight_version
+        if: ${{ steps.tailwind-version.outputs.tailwind_version }} > ${{ steps.preflight-version.outputs.preflight_version }}
         run: |
-          curl -s "https://cdn.jsdelivr.net/npm/tailwindcss@${TAILWIND_VERSION}/src/css/preflight.css" --output preflight.css
-          npm version --no-git-tag-version "${TAILWIND_VERSION}"
+          NEW_VERSION=${{ steps.tailwind-version.outputs.tailwind_version }}
+          curl -s "https://cdn.jsdelivr.net/npm/tailwindcss@${NEW_VERSION}/src/css/preflight.css" --output preflight.css
+          npm version --no-git-tag-version "${NEW_VERSION}"
           npm run publish
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add preflight.css package.json
-          git commit -m "Update Preflight to ${TAILWIND_VERSION}"
+          git commit -m "Update Preflight to ${NEW_VERSION}"
           git push
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

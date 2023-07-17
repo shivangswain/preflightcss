@@ -3,6 +3,7 @@ name: Update Preflight
 on:
   schedule:
     - cron: '23 1 * * *' # Runs at 01:23 UTC every day
+  workflow_dispatch:
 
 jobs:
   update:

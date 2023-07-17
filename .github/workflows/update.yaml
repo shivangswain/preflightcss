@@ -21,13 +21,13 @@ jobs:
         id: tailwind-version
         run: |
           TAILWIND_VERSION=$(curl -s 'https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest' | jq -r '.tag_name' | cut -c 2-)
-          echo "::set-output name=tailwind_version::$TAILWIND_VERSION"
+          echo "tailwind_version=$TAILWIND_VERSION" >> $GITHUB_OUTPUT
 
       - name: Read current Preflight version
         id: preflight-version
         run: |
           PREFLIGHT_VERSION=$(jq -r '.version' package.json)
-          echo "::set-output name=preflight_version::$PREFLIGHT_VERSION"
+          echo "preflight_version=$PREFLIGHT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update Preflight
         if: steps.tailwind-version.outputs.tailwind_version > steps.preflight-version.outputs.preflight_version

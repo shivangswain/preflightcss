@@ -32,7 +32,7 @@ jobs:
         if: steps.tailwind-version.outputs.tailwind_version > steps.preflight-version.outputs.preflight_version
         run: |
           curl -s "https://cdn.jsdelivr.net/npm/tailwindcss@${TAILWIND_VERSION}/src/css/preflight.css" --output preflight.css
-          npm version "${TAILWIND_VERSION}"
+          npm version --no-git-tag-version "${TAILWIND_VERSION}"
           npm run publish
           git config user.name github-actions
           git config user.email github-actions@github.com

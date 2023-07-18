@@ -1,45 +1,68 @@
 name: Update Preflight
 
 on:
-  schedule:
-    - cron: '23 1 * * *' # Runs at 01:23 UTC every day
+  workflow_call:
+    inputs:
+      tailwind-version:
+        description: 'Tailwind CSS version'
+      preflight-version:
+        description: 'Preflight version'
+      dry-run:
+        description: 'Perform a dry run'
   workflow_dispatch:
+    inputs:
+      tailwind-version:
+        description: 'Tailwind CSS version'
+        required: true
+      preflight-version:
+        description: 'Preflight version'
+        required: true
+      dry-run:
+        default: true
+        description: 'Perform a dry run'
+        required: false
 
 jobs:
-  update:
+  update-preflight:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'latest'
-
-      - name: Check latest Tailwind CSS version
-        id: tailwind-version
+      - name: Download preflight.css from Tailwind release
         run: |
-          TAILWIND_VERSION=$(curl -s 'https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest' | jq -r '.tag_name' | cut -c 2-)
-          echo "tailwind_version=$TAILWIND_VERSION" >> $GITHUB_OUTPUT
+          curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@${{ inputs.tailwind-version }}/src/css/preflight.css"
+          echo "Successfully downloaded & replaced preflight.css"
 
-      - name: Read current Preflight version
-        id: preflight-version
+      - name: Update package.json version
         run: |
-          PREFLIGHT_VERSION=$(jq -r '.version' package.json)
-          echo "preflight_version=$PREFLIGHT_VERSION" >> $GITHUB_OUTPUT
+          npm version --no-git-tag-version ${{ inputs.tailwind-version }}
+          echo "Successfully updated package.json version"
 
-      - name: Update Preflight
-        if: ${{ steps.tailwind-version.outputs.tailwind_version }} > ${{ steps.preflight-version.outputs.preflight_version }}
+      - name: Publish package
+        if: ${{ inputs.dry-run }} == false
         run: |
-          NEW_VERSION=${{ steps.tailwind-version.outputs.tailwind_version }}
-          curl -s "https://cdn.jsdelivr.net/npm/tailwindcss@${NEW_VERSION}/src/css/preflight.css" --output preflight.css
-          npm version --no-git-tag-version "${NEW_VERSION}"
           npm publish
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          echo "Successfully published package"
+
+      - name: Stage files
+        if: ${{ inputs.dry-run }} == false
+        run: |
           git add preflight.css package.json
-          git commit -m "Update Preflight to ${NEW_VERSION}"
+          echo "Successfully staged files"
+
+      - name: Configure git
+        if: ${{ inputs.dry-run }} == false
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "github-actions@github.com"
+          echo "Successfully configured git"
+
+      - name: Commit changes
+        if: ${{ inputs.dry-run }} == false
+        run: |
+          git commit -m "Updated Preflight to ${{ inputs.tailwind-version }}"
+          echo "Successfully committed changes"
+
+      - name: Push changes
+        if: ${{ inputs.dry-run }} == false
+        run: |
           git push
-        env:
-            NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          echo "Successfully pushed changes"

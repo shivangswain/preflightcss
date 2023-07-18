@@ -1,14 +1,6 @@
 name: Update Preflight
 
 on:
-  workflow_call:
-    inputs:
-      tailwind-version:
-        description: 'Tailwind CSS version'
-      preflight-version:
-        description: 'Preflight version'
-      dry-run:
-        description: 'Perform a dry run'
   workflow_dispatch:
     inputs:
       tailwind-version:

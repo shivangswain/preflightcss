@@ -38,7 +38,7 @@ jobs:
   
       - name: Run update
         if: ${{ steps.check-update.outputs.update == 'true' }}
-        uses: ./.github/workflows/update.yaml
+        uses: shivangswain/preflightcss/.github/workflows/update.yaml@main
         with:
           tailwind-version: ${{ env.TAILWIND_VERSION }}
           preflight-version: ${{ env.PREFLIGHT_VERSION }}

@@ -1,60 +1,68 @@
-name: Update Preflight
+name: Check & Update Preflight
 
 on:
+  schedule:
+    - cron: "23 1 * * *"
   workflow_dispatch:
     inputs:
-      tailwind-version:
-        description: 'Tailwind CSS version'
-        required: true
-      preflight-version:
-        description: 'Preflight version'
-        required: true
       dry-run:
         default: true
         description: 'Perform a dry run'
         required: false
 
 jobs:
-  update-preflight:
+  check-versions:
     runs-on: ubuntu-latest
+    env:
+      TAILWIND_API: "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest"
     steps:
-      - name: Download preflight.css from Tailwind release
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get latest Tailwind version
         run: |
-          curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@${{ inputs.tailwind-version }}/src/css/preflight.css"
+          echo "TAILWIND_VERSION=$(curl -s $TAILWIND_API | jq -r '.tag_name' | cut -c 2-)" >> $GITHUB_ENV
+
+      - name: Get latest Preflight version
+        run: |
+          echo "PREFLIGHT_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Run update check if Tailwind version is greater than Preflight version
+        run: |
+          if [[ ${{ env.TAILWIND_VERSION }} > ${{ env.PREFLIGHT_VERSION }} ]]; then
+            echo "update=true" >> $GITHUB_OUTPUT
+          else
+            echo "update=false" >> $GITHUB_OUTPUT
+          fi
+        id: check-update
+  
+      - name: Download preflight.css from Tailwind release
+        if: {{ steps.check-update.outputs.update }} == true
+        run: |
+          curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@$TAILWIND_VERSION/src/css/preflight.css"
           echo "Successfully downloaded & replaced preflight.css"
 
       - name: Update package.json version
+        if: {{ steps.check-update.outputs.update }} == true
         run: |
-          npm version --no-git-tag-version ${{ inputs.tailwind-version }}
+          npm version --no-git-tag-version $TAILWIND_VERSION
           echo "Successfully updated package.json version"
 
       - name: Publish package
-        if: ${{ inputs.dry-run }} == false
+        if: ${{ inputs.dry-run }} == false && {{ steps.check-update.outputs.update }} == true
         run: |
-          npm publish
+          npm publish --access=public
           echo "Successfully published package"
 
-      - name: Stage files
-        if: ${{ inputs.dry-run }} == false
-        run: |
-          git add preflight.css package.json
-          echo "Successfully staged files"
-
-      - name: Configure git
-        if: ${{ inputs.dry-run }} == false
+      - name: Commit & push changes
+        if: ${{ inputs.dry-run }} == false && {{ steps.check-update.outputs.update }} == true
         run: |
           git config user.name "GitHub Action"
           git config user.email "github-actions@github.com"
           echo "Successfully configured git"
-
-      - name: Commit changes
-        if: ${{ inputs.dry-run }} == false
-        run: |
-          git commit -m "Updated Preflight to ${{ inputs.tailwind-version }}"
+          git add preflight.css package.json
+          echo "Successfully staged files"
+          git commit -m "Updated Preflight to $TAILWIND_VERSION"
           echo "Successfully committed changes"
-
-      - name: Push changes
-        if: ${{ inputs.dry-run }} == false
-        run: |
           git push
           echo "Successfully pushed changes"

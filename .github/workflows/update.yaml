@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       dry-run:
-        default: true
-        description: 'Perform a dry run'
+        default: "true"
+        description: "Perform a dry run"
         required: false
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Get latest Preflight version
         run: |
-          echo "PREFLIGHT_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+          echo "PREFLIGHT_VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
 
       - name: Run update check if Tailwind version is greater than Preflight version
         run: |

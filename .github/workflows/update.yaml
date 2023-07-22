@@ -19,6 +19,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup Node
+        uses: actions/setup-node@v3
+
       - name: Get latest Tailwind version
         run: |
           echo "TAILWIND_VERSION=$(curl -s $TAILWIND_API | jq -r '.tag_name' | cut -c 2-)" >> $GITHUB_ENV

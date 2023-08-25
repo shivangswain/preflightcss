@@ -21,6 +21,8 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v3
+        with:
+          node-version: "20"
 
       - name: Get latest Tailwind version
         run: |
@@ -55,9 +57,10 @@ jobs:
       - name: Publish package
         if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
         run: |
-          npm adduser
           npm publish --access=public
           echo "Successfully published package"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit & push changes
         if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true

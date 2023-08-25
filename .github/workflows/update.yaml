@@ -11,10 +11,8 @@ on:
         required: false
 
 jobs:
-  check-versions:
+  setup:
     runs-on: ubuntu-latest
-    env:
-      TAILWIND_API: "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -25,9 +23,12 @@ jobs:
           node-version: "20"
           registry-url: 'https://registry.npmjs.org'
 
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
       - name: Get latest Tailwind version
         run: |
-          echo "TAILWIND_VERSION=$(curl -s $TAILWIND_API | jq -r '.tag_name' | cut -c 2-)" >> $GITHUB_ENV
+          echo "TAILWIND_VERSION=$(curl -s "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest" | jq -r '.tag_name' | cut -c 2-)" >> $GITHUB_ENV
 
       - name: Get latest Preflight version
         run: |
@@ -42,36 +43,50 @@ jobs:
             echo "update=false" >> $GITHUB_OUTPUT
           fi
         id: check-update
-  
+    
+  update-files:
+    if: ${{ steps.check-update.outputs.update }} == true
+    runs-on: ubuntu-latest
+    steps:  
       - name: Download preflight.css from Tailwind release
-        if: ${{ steps.check-update.outputs.update }} == true
         run: |
           curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@$TAILWIND_VERSION/src/css/preflight.css"
           echo "Successfully downloaded & replaced preflight.css"
 
       - name: Update package.json version
-        if: ${{ steps.check-update.outputs.update }} == true
         run: |
           npm version --no-git-tag-version $TAILWIND_VERSION
           echo "Successfully updated package.json version"
 
-      - name: Publish package
-        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
+  publish-package:
+    if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish package to NPM
         run: |
           npm publish --access=public
           echo "Successfully published package"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Commit & push changes
-        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
+  commit-changes:
+    if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Git
         run: |
           git config user.name "GitHub Action"
           git config user.email "github-actions@github.com"
           echo "Successfully configured git"
+
+      - name: Commit changes
+        run: |
           git add preflight.css package.json
           echo "Successfully staged files"
           git commit -m "Updated Preflight to $TAILWIND_VERSION"
           echo "Successfully committed changes"
+
+      - name: Push changes
+        run: |
           git push
           echo "Successfully pushed changes"

@@ -25,20 +25,20 @@ jobs:
 
       - name: Get latest Tailwind version
         run: |
-          TAILWIND_VERSION = $(curl -s "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest" | jq -r '.tag_name' | cut -c 2-)
-          echo "TAILWIND_VERSION = $"TAILWIND_VERSION >> $GITHUB_ENV
+          TAILWIND_VERSION=$(curl -s "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest" | jq -r '.tag_name' | cut -c 2-)
+          echo "TAILWIND_VERSION=$"TAILWIND_VERSION >> $GITHUB_ENV
 
       - name: Get latest Preflight version
         run: |
-          PREFLIGHT_VERSION = $(node -p "require('./package.json').version")
-          echo "PREFLIGHT_VERSION = $PREFLIGHT_VERSION" >> $GITHUB_ENV
+          PREFLIGHT_VERSION=$(node -p "require('./package.json').version")
+          echo "PREFLIGHT_VERSION=$PREFLIGHT_VERSION" >> $GITHUB_ENV
 
       - name: Run update check if Tailwind version is greater than Preflight version
         run: |
           if [[ ${{ env.TAILWIND_VERSION }} > ${{ env.PREFLIGHT_VERSION }} ]]; then
-            echo "update = true" >> $GITHUB_OUTPUT
+            echo "update=true" >> $GITHUB_OUTPUT
           else
-            echo "update = false" >> $GITHUB_OUTPUT
+            echo "update=false" >> $GITHUB_OUTPUT
           fi
         id: check-update
 

@@ -35,7 +35,7 @@ jobs:
 
       - name: Run update check if Tailwind version is greater than Preflight version
         run: |
-          if [[ ${{ env.TAILWIND_VERSION }} > ${{ env.PREFLIGHT_VERSION }} ]]; then
+          if [[ ${{ env.TAILWIND_VERSION > env.PREFLIGHT_VERSION }} ]]; then
             echo "update=true" >> $GITHUB_OUTPUT
           else
             echo "update=false" >> $GITHUB_OUTPUT
@@ -45,13 +45,13 @@ jobs:
       - name: Download preflight.css from Tailwind release
         if: ${{ steps.check-update.outputs.update }} == true
         run: |
-          curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@$TAILWIND_VERSION/src/css/preflight.css"
+          curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@${{ env.TAILWIND_VERSION }}/src/css/preflight.css"
           echo "Successfully downloaded & replaced preflight.css"
 
       - name: Update package.json version
         if: ${{ steps.check-update.outputs.update }} == true
         run: |
-          npm version --no-git-tag-version $TAILWIND_VERSION
+          npm version --no-git-tag-version ${{ env.TAILWIND_VERSION }}
           echo "Successfully updated package.json version"
 
       - name: Commit & push changes
@@ -62,7 +62,7 @@ jobs:
           echo "Successfully configured git"
           git add preflight.css package.json
           echo "Successfully staged files"
-          git commit -m "Updated Preflight to $TAILWIND_VERSION"
+          git commit -m "Updated Preflight to ${{ env.TAILWIND_VERSION }}"
           echo "Successfully committed changes"
           git push
           echo "Successfully pushed changes"

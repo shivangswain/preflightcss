@@ -35,7 +35,7 @@ jobs:
 
       - name: Run update check if Tailwind version is greater than Preflight version
         run: |
-          if [[ ${{ env.TAILWIND_VERSION > env.PREFLIGHT_VERSION }} ]]; then
+          if [[ ${{ env.TAILWIND_VERSION }} > ${{ env.PREFLIGHT_VERSION }} ]]; then
             echo "update=true" >> $GITHUB_OUTPUT
           else
             echo "update=false" >> $GITHUB_OUTPUT

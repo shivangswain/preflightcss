@@ -25,6 +25,9 @@ jobs:
 
   check-versions:
     runs-on: ubuntu-latest
+    needs: setup
+    outputs:
+      update: ${{ steps.check-update.outputs.update }}
     steps:
       - name: Get latest Tailwind version
         run: |
@@ -45,25 +48,26 @@ jobs:
         id: check-update
     
   update-files:
+    if: ${{ needs.check-versions.outputs.update }} == true
+    needs: check-versions
     runs-on: ubuntu-latest
     steps:  
       - name: Download preflight.css from Tailwind release
-        if: ${{ steps.check-update.outputs.update }} == true
         run: |
           curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@$TAILWIND_VERSION/src/css/preflight.css"
           echo "Successfully downloaded & replaced preflight.css"
 
       - name: Update package.json version
-        if: ${{ steps.check-update.outputs.update }} == true
         run: |
           npm version --no-git-tag-version $TAILWIND_VERSION
           echo "Successfully updated package.json version"
 
   publish-package:
+    if: ${{ inputs.dry-run }} == false && ${{ needs.check-versions.outputs.update }} == true
+    needs: check-versions
     runs-on: ubuntu-latest
     steps:
       - name: Publish package to NPM
-        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
         run: |
           npm publish --access=public
           echo "Successfully published package"
@@ -71,17 +75,16 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   commit-changes:
-    runs-on: ubuntu-latest
+    if: ${{ inputs.dry-run }} == false && ${{ needs.check-versions.outputs.update }} == true
+    needs: check-versions
     steps:
       - name: Configure Git
-        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
         run: |
           git config user.name "GitHub Action"
           git config user.email "github-actions@github.com"
           echo "Successfully configured git"
 
       - name: Commit changes
-        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
         run: |
           git add preflight.css package.json
           echo "Successfully staged files"
@@ -89,7 +92,6 @@ jobs:
           echo "Successfully committed changes"
 
       - name: Push changes
-        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
         run: |
           git push
           echo "Successfully pushed changes"

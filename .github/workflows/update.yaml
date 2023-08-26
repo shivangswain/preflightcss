@@ -11,7 +11,7 @@ on:
         required: false
 
 jobs:
-  setup:
+  check-versions:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,76 +23,54 @@ jobs:
           node-version: "20"
           registry-url: 'https://registry.npmjs.org'
 
-  check-versions:
-    needs: setup
-    outputs:
-      update: ${{ steps.check-update.outputs.update }}
-    runs-on: ubuntu-latest
-    steps:
       - name: Get latest Tailwind version
         run: |
-          echo "TAILWIND_VERSION=$(curl -s "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest" | jq -r '.tag_name' | cut -c 2-)" >> $GITHUB_ENV
+          TAILWIND_VERSION = $(curl -s "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest" | jq -r '.tag_name' | cut -c 2-)
+          echo "TAILWIND_VERSION = $"TAILWIND_VERSION >> $GITHUB_ENV
 
       - name: Get latest Preflight version
         run: |
-          PREFLIGHT_VERSION=$(node -p "require('./package.json').version")
-          echo "PREFLIGHT_VERSION=$PREFLIGHT_VERSION" >> $GITHUB_ENV
+          PREFLIGHT_VERSION = $(node -p "require('./package.json').version")
+          echo "PREFLIGHT_VERSION = $PREFLIGHT_VERSION" >> $GITHUB_ENV
 
       - name: Run update check if Tailwind version is greater than Preflight version
         run: |
           if [[ ${{ env.TAILWIND_VERSION }} > ${{ env.PREFLIGHT_VERSION }} ]]; then
-            echo "update=true" >> $GITHUB_OUTPUT
+            echo "update = true" >> $GITHUB_OUTPUT
           else
-            echo "update=false" >> $GITHUB_OUTPUT
+            echo "update = false" >> $GITHUB_OUTPUT
           fi
         id: check-update
-    
-  update-files:
-    if: ${{ needs.check-versions.outputs.update }} == true
-    needs: check-versions
-    runs-on: ubuntu-latest
-    steps:  
+
       - name: Download preflight.css from Tailwind release
+        if: ${{ steps.check-update.outputs.update }} == true
         run: |
           curl -sL -o preflight.css "https://cdn.jsdelivr.net/npm/tailwindcss@$TAILWIND_VERSION/src/css/preflight.css"
           echo "Successfully downloaded & replaced preflight.css"
 
       - name: Update package.json version
+        if: ${{ steps.check-update.outputs.update }} == true
         run: |
           npm version --no-git-tag-version $TAILWIND_VERSION
           echo "Successfully updated package.json version"
 
-  publish-package:
-    if: ${{ inputs.dry-run }} == false && ${{ needs.check-versions.outputs.update }} == true
-    needs: update-files
-    runs-on: ubuntu-latest
-    steps:
-      - name: Publish package to NPM
+      - name: Commit & push changes
+        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "github-actions@github.com"
+          echo "Successfully configured git"
+          git add preflight.css package.json
+          echo "Successfully staged files"
+          git commit -m "Updated Preflight to $TAILWIND_VERSION"
+          echo "Successfully committed changes"
+          git push
+          echo "Successfully pushed changes"
+
+      - name: Publish package
+        if: ${{ inputs.dry-run }} == false && ${{ steps.check-update.outputs.update }} == true
         run: |
           npm publish --access=public
           echo "Successfully published package"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  commit-changes:
-    if: ${{ inputs.dry-run }} == false && ${{ needs.check-versions.outputs.update }} == true
-    needs: update-files
-    runs-on: ubuntu-latest
-    steps:
-      - name: Configure Git
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "github-actions@github.com"
-          echo "Successfully configured git"
-
-      - name: Commit changes
-        run: |
-          git add preflight.css package.json
-          echo "Successfully staged files"
-          git commit -m "Updated Preflight to $TAILWIND_VERSION"
-          echo "Successfully committed changes"
-
-      - name: Push changes
-        run: |
-          git push
-          echo "Successfully pushed changes"

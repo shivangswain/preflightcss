@@ -26,7 +26,7 @@ jobs:
       - name: Get latest Tailwind version
         run: |
           TAILWIND_VERSION=$(curl -s "https://api.github.com/repos/tailwindlabs/tailwindcss/releases/latest" | jq -r '.tag_name' | cut -c 2-)
-          echo "TAILWIND_VERSION=$"TAILWIND_VERSION >> $GITHUB_ENV
+          echo "TAILWIND_VERSION=$TAILWIND_VERSION" >> $GITHUB_ENV
 
       - name: Get latest Preflight version
         run: |
